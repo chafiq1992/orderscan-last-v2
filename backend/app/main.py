@@ -1,15 +1,27 @@
+# backend/app/main.py
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles          # ← missing import added
 from sqlalchemy.ext.asyncio import AsyncSession
+from pathlib import Path
+
 from . import database, crud, schemas
 from .models import Base
-from pathlib import Path
 
 app = FastAPI(title="Order‑Scanner API")
 
-FRONT_DIR = Path(__file__).parent.parent / "frontend"   # => /app/frontend
+# ------------------------------------------------------------------
+# Serve the UI copied to /app/frontend by the Dockerfile
+# ------------------------------------------------------------------
+FRONT_DIR = Path("/app/frontend")                    # absolute path
+if not FRONT_DIR.exists():
+    raise RuntimeError(f"Frontend directory missing: {FRONT_DIR}")
+
 app.mount("/", StaticFiles(directory=FRONT_DIR, html=True), name="frontend")
 
+# ------------------------------------------------------------------
+# CORS
+# ------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,15 +29,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ------------------------------------------------------------------
+# DB dependency
+# ------------------------------------------------------------------
 async def get_db() -> AsyncSession:
     async with database.AsyncSessionLocal() as session:
         yield session
 
+# ------------------------------------------------------------------
+# Startup: auto‑create tables
+# ------------------------------------------------------------------
 @app.on_event("startup")
-async def startup() -> None:
+async def on_startup() -> None:
     async with database.engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+# ------------------------------------------------------------------
+# API routes
+# ------------------------------------------------------------------
 @app.post("/scan", response_model=schemas.ScanOut)
 async def scan(data: schemas.ScanIn, db: AsyncSession = Depends(get_db)):
     return await crud.append_scan(db, data)
