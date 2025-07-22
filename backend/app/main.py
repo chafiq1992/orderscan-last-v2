@@ -3,8 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from . import database, crud, schemas
 from .models import Base
+from fastapi.staticfiles import StaticFiles
+import pathlib
 
 app = FastAPI(title="Order‑Scanner API")
+
+FRONT_DIR = pathlib.Path(__file__).parent.parent.parent / "frontend"
+app.mount("/", StaticFiles(directory=FRONT_DIR, html=True), name="frontend")
 
 app.add_middleware(
     CORSMiddleware,
