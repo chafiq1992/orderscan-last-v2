@@ -8,7 +8,7 @@ import pathlib
 
 app = FastAPI(title="Order‑Scanner API")
 
-FRONT_DIR = pathlib.Path(__file__).parent.parent.parent / "frontend"
+FRONT_DIR = pathlib.Path(__file__).parent.parent / "app" / "frontend"
 app.mount("/", StaticFiles(directory=FRONT_DIR, html=True), name="frontend")
 
 app.add_middleware(
