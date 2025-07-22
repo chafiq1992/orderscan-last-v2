@@ -1,5 +1,5 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/order-scanner:$SHORT_SHA', './backend']
+    args: ['build', '-f', 'Dockerfile', '-t', 'gcr.io/$PROJECT_ID/order-scanner:$SHORT_SHA', '.']
 images:
   - 'gcr.io/$PROJECT_ID/order-scanner:$SHORT_SHA'
